@@ -1,9 +1,12 @@
 package com.example.demo.controller;
 
+import com.example.demo.Employee;
 import com.example.demo.dto.BatchRequestDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,12 +17,52 @@ import java.util.Map;
 public class SampleController {
 
     private static final Logger logger = LoggerFactory.getLogger(SampleController.class);
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
-    // Sample GET method to say hello
+    // CREATE: Insert a new user into the SAP HANA database
+    @PostMapping("/users")
+    public ResponseEntity<String> createUser(@RequestParam String name, @RequestParam String email) {
+        String sql = "INSERT INTO USERS (NAME, EMAIL) VALUES (?, ?)";
+//        jdbcTemplate.update(sql, name, email); // Execute the insert
+        return ResponseEntity.ok("User created successfully");
+    }
+
+    // READ: Get all users from SAP HANA and return as JSON
+    @GetMapping("/users")
+    public ResponseEntity<List<Map<String, Object>>> getAllUsers() {
+        String sql = "SELECT * FROM EMPLOYEES";
+        List<Map<String, Object>> users = jdbcTemplate.queryForList(sql);
+        return ResponseEntity.ok(users); // Return the result as JSON
+    }
+
+    @PostMapping("/usersSAP")
+    public ResponseEntity<String> createUserSAP1(@RequestBody Map<String, Object> payload) {
+        // Extract values from the Map
+        Integer empId =  (Integer) payload.get("EMP_ID");
+        String empName = (String) payload.get("EMP_NAME");
+        String department = (String) payload.get("DEPARTMENT");
+        String joinDate = (String) payload.get("JOIN_DATE");
+
+        // SQL query with explicit column names
+        String sql = "INSERT INTO EMPLOYEES (EMP_ID, EMP_NAME, DEPARTMENT, JOIN_DATE) VALUES (?, ?, ?, ?)";
+
+        // Execute the insert statement using parameterized query
+        int rowsInserted = jdbcTemplate.update(sql, empId, empName, department, joinDate);
+
+        // Return the appropriate response based on the number of rows affected
+        if (rowsInserted > 0) {
+            return ResponseEntity.ok("User created successfully");
+        } else {
+            return ResponseEntity.status(400).body("Failed to create user");
+        }
+    }
+
+
     @GetMapping("/hello")
     public String sayHello() {
         logger.info("Received GET request for /hello");
-        return "Hello, World!";
+        return "CPU SAPConnect";
     }
 
     // Sample POST method to greet a user
