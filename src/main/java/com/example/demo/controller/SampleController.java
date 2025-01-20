@@ -20,6 +20,60 @@ public class SampleController {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    // New: Get all PR/PO records
+    @GetMapping("/pr-po")
+    public List<Map<String, Object>> getAllPRPORecords() {
+        String sql = "SELECT * FROM PR_PO_TABLE";
+        return jdbcTemplate.queryForList(sql);  // Executes the query and returns the result as a list of maps
+    }
+
+    // New: Get PR/PO record by ID
+    @GetMapping("/pr-po/{id}")
+    public Map<String, Object> getPRPORecordById(@PathVariable Long id) {
+        String sql = "SELECT * FROM PR_PO_TABLE WHERE ID = ?";
+        return jdbcTemplate.queryForMap(sql, id);  // Fetch a single row as a map
+    }
+
+    // New: Create a new PR/PO record
+    @PostMapping("/pr-po")
+    public String createPRPORecord(@RequestBody Map<String, Object> prpoRecord) {
+        String sql = "INSERT INTO PR_PO_TABLE (Requester_Name, Requester_Department, Delivering_Factory, Receiving_Factory, " +
+                "Document_Number, Receiving_Department, Date, No, Description, Quantity_Out, Quantity_In, Remarks, Image_Path) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        int result = jdbcTemplate.update(sql,
+                prpoRecord.get("Requester_Name"), prpoRecord.get("Requester_Department"),
+                prpoRecord.get("Delivering_Factory"), prpoRecord.get("Receiving_Factory"),
+                prpoRecord.get("Document_Number"), prpoRecord.get("Receiving_Department"),
+                prpoRecord.get("Date"), prpoRecord.get("No"), prpoRecord.get("Description"),
+                prpoRecord.get("Quantity_Out"), prpoRecord.get("Quantity_In"),
+                prpoRecord.get("Remarks"), prpoRecord.get("Image_Path"));
+        return result > 0 ? "PR/PO record created successfully" : "Failed to create PR/PO record";
+    }
+
+    // New: Update PR/PO record
+    @PutMapping("/pr-po/{id}")
+    public String updatePRPORecord(@PathVariable Long id, @RequestBody Map<String, Object> prpoRecord) {
+        String sql = "UPDATE PR_PO_TABLE SET Requester_Name = ?, Requester_Department = ?, Delivering_Factory = ?, " +
+                "Receiving_Factory = ?, Document_Number = ?, Receiving_Department = ?, Date = ?, No = ?, " +
+                "Description = ?, Quantity_Out = ?, Quantity_In = ?, Remarks = ?, Image_Path = ? WHERE ID = ?";
+        int result = jdbcTemplate.update(sql,
+                prpoRecord.get("Requester_Name"), prpoRecord.get("Requester_Department"),
+                prpoRecord.get("Delivering_Factory"), prpoRecord.get("Receiving_Factory"),
+                prpoRecord.get("Document_Number"), prpoRecord.get("Receiving_Department"),
+                prpoRecord.get("Date"), prpoRecord.get("No"), prpoRecord.get("Description"),
+                prpoRecord.get("Quantity_Out"), prpoRecord.get("Quantity_In"),
+                prpoRecord.get("Remarks"), prpoRecord.get("Image_Path"), id);
+        return result > 0 ? "PR/PO record updated successfully" : "Failed to update PR/PO record";
+    }
+
+    // New: Delete PR/PO record by ID
+    @DeleteMapping("/pr-po/{id}")
+    public String deletePRPORecord(@PathVariable Long id) {
+        String sql = "DELETE FROM PR_PO_TABLE WHERE ID = ?";
+        int result = jdbcTemplate.update(sql, id);
+        return result > 0 ? "PR/PO record deleted successfully" : "Failed to delete PR/PO record";
+    }
+
     // CREATE: Insert a new user into the SAP HANA database
     @PostMapping("/users")
     public ResponseEntity<String> createUser(@RequestParam String name, @RequestParam String email) {
